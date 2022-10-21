@@ -56,6 +56,7 @@ def download(
     max_aspect_ratio: float = float("inf"),
     incremental_mode: str = "incremental",
     max_shard_retry: int = 1,
+    main_thread: bool = True
 ):
     """Download is the main entry point of img2dataset, it uses multiple processes and download multiple files"""
     config_parameters = dict(locals())
@@ -83,8 +84,9 @@ def download(
             pass
         logger_process.terminate()
         sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
+    
+    if main_thread:
+        signal.signal(signal.SIGINT, signal_handler)
 
     save_caption = caption_col is not None
 
@@ -184,7 +186,10 @@ def download(
         max_shard_retry,
     )
     logger_process.join()
-    fs.rm(tmp_dir, recursive=True)
+    try:
+        fs.rm(tmp_dir, recursive=True)
+    except Exception as _:
+        pass
 
 
 def main():
